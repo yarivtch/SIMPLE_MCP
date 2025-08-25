@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>עוזר חכם לעובד סוציאלי - AI Assistant</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: #f0f8ff;
+            color: #202123;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .app-container {
+            display: flex;
+            height: 100vh;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: #2c3e50;
+            display: flex;
+            flex-direction: column;
+            border-left: 1px solid #34495e;
+        }
+        
+        .sidebar-header {
+            padding: 16px;
+            border-bottom: 1px solid #34495e;
+        }
+        
+        .new-chat-btn {
+            width: 100%;
+            padding: 12px 16px;
+            background: #16a085;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .new-chat-btn:hover {
+            background: #138d75;
+        }
+        
+        .chat-history {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px 0;
+        }
+        
+        .chat-item {
+            padding: 12px 16px;
+            margin: 2px 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            color: #ecf0f1;
+            font-size: 14px;
+            transition: background 0.2s ease;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .chat-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .chat-item.active {
+            background: rgba(22, 160, 133, 0.3);
+        }
+        
+        .sidebar-footer {
+            padding: 16px;
+            border-top: 1px solid #34495e;
+            color: #bdc3c7;
+            font-size: 12px;
+        }
+        
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #16a085;
+        }
+        
+        /* Main Chat Area */
+        .chat-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: white;
+        }
+        
+        .chat-header {
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            border-bottom: 1px solid #e5e5e5;
+            background: linear-gradient(135deg, #16a085 0%, #2c3e50 100%);
+            color: white;
+        }
+        
+        .chat-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .model-selector {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            font-size: 14px;
+            color: white;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px 0;
+        }
+        
+        .message-group {
+            max-width: 768px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+        
+        .message {
+            display: flex;
+            gap: 16px;
+            padding: 24px 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        
+        .message:last-child {
+            border-bottom: none;
+        }
+        
+        .message-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+            margin-top: 4px;
+        }
+        
+        .user-avatar {
+            background: #16a085;
+            color: white;
+        }
+        
+        .ai-avatar {
+            background: linear-gradient(135deg, #16a085 0%, #2c3e50 100%);
+            color: white;
+        }
+        
+        .message-content {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .message-text {
+            line-height: 1.7;
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+        
+        .message-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 12px;
+            color: #8e8ea0;
+        }
+        
+        /* Input Area */
+        .input-area {
+            background: white;
+            border-top: 1px solid #e5e5e5;
+            padding: 24px;
+        }
+        
+        .input-container {
+            max-width: 768px;
+            margin: 0 auto;
+            position: relative;
+        }
+        
+        .suggestions {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+        
+        .suggestion-chip {
+            padding: 8px 14px;
+            background: #ecf0f1;
+            border: 1px solid #bdc3c7;
+            border-radius: 20px;
+            font-size: 13px;
+            color: #2c3e50;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+        
+        .suggestion-chip:hover {
+            background: #16a085;
+            color: white;
+            border-color: #16a085;
+        }
+        
+        .input-wrapper {
+            position: relative;
+            background: white;
+            border: 1px solid #bdc3c7;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: border-color 0.2s ease;
+            box-shadow: 0 0 0 0 rgba(22, 160, 133, 0);
+        }
+        
+        .input-wrapper:focus-within {
+            border-color: #16a085;
+            box-shadow: 0 0 0 3px rgba(22, 160, 133, 0.1);
+        }
+        
+        .message-input {
+            width: 100%;
+            min-height: 24px;
+            max-height: 200px;
+            padding: 12px 52px 12px 16px;
+            border: none;
+            outline: none;
+            font-size: 16px;
+            font-family: inherit;
+            resize: none;
+            line-height: 1.5;
+            overflow-y: auto;
+        }
+        
+        .message-input::placeholder {
+            color: #95a5a6;
+        }
+        
+        .send-button {
+            position: absolute;
+            left: 8px;
+            bottom: 6px;
+            width: 32px;
+            height: 32px;
+            background: #16a085;
+            border: none;
+            border-radius: 6px;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s ease;
+        }
+        
+        .send-button:hover:not(:disabled) {
+            background: #138d75;
+        }
+        
+        .send-button:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+        }
+        
+        .input-footer {
+            margin-top: 12px;
+            text-align: center;
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+        
+        /* Welcome Screen */
+        .welcome-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            text-align: center;
+            padding: 24px;
+        }
+        
+        .welcome-icon {
+            font-size: 48px;
+            background: linear-gradient(135deg, #27ae60 0%, #16a085 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 24px;
+        }
+        
+        .welcome-title {
+            font-size: 32px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #2c3e50;
+        }
+        
+        .welcome-subtitle {
+            font-size: 16px;
+            color: #34495e;
+            margin-bottom: 32px;
+            line-height: 1.5;
+        }
+        
+        .example-prompts {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+            max-width: 800px;
+            width: 100%;
+        }
+        
+        .example-card {
+            padding: 20px;
+            background: white;
+            border: 1px solid #ecf0f1;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: right;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .example-card:hover {
+            border-color: #16a085;
+            box-shadow: 0 4px 12px rgba(22, 160, 133, 0.15);
+            transform: translateY(-2px);
+        }
+        
+        .example-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+        
+        .example-description {
+            font-size: 14px;
+            color: #34495e;
+            line-height: 1.4;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 260px;
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+                position: absolute;
+                height: 100%;
+                z-index: 1000;
+            }
+            
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            
+            .chat-main {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <button class="new-chat-btn" onclick="startNewChat()">
+                    <i class="fas fa-plus"></i>
+                    ייעוץ חדש
+                </button>
+            </div>
+            
+            <div class="chat-history" id="chat-history">
+                <div class="chat-item active">ייעוץ נוכחי</div>
+            </div>
+            
+            <div class="sidebar-footer">
+                <div class="status-indicator">
+                    <div class="status-dot" id="connection-status"></div>
+                    <span id="status-text">מתחבר לעוזר...</span>
+                </div>
+                <div id="tools-info">טוען כלים מקצועיים...</div>
+            </div>
+        </div>
+
+        <!-- Main Chat -->
+        <div class="chat-main">
+            <div class="chat-header">
+                <h1 class="chat-title">🔑 עוזר חכם לעובד סוציאלי</h1>
+                <div class="model-selector">
+                    <i class="fas fa-user-md"></i>
+                    <span>AI מקצועי</span>
+                </div>
+            </div>
+            
+            <div class="chat-messages" id="chat-messages">
+                <div class="welcome-screen" id="welcome-screen">
+                    <div class="welcome-icon">🔑</div>
+                    <h2 class="welcome-title">ברוך הבא! איך אוכל לסייע היום?</h2>
+                    <p class="welcome-subtitle">
+                        אני עוזר חכם המיועד לסייע לעובדים סוציאליים בעבודתם היומיומית<br>
+                        אני יכול לעזור בייעוץ מקצועי, הכנת תוכניות טיפול, וניתוח מצבים מורכבים
+                    </p>
+                    
+                    <div class="example-prompts">
+                        <div class="example-card" onclick="sendExampleMessage('עזור לי להכין תוכנית טיפול למשפחה')">
+                            <div class="example-title">📋 תוכנית טיפול</div>
+                            <div class="example-description">הכנת תוכניות טיפול מותאמות אישית למקרים שונים</div>
+                        </div>
+                        
+                        <div class="example-card" onclick="sendExampleMessage('איך אני מתמודד עם הורה שמסרב לשיתוף פעולה?')">
+                            <div class="example-title">🗣️ ייעוץ מקצועי</div>
+                            <div class="example-description">קבלת הכוונה במצבים מורכבים ואתגרים מקצועיים</div>
+                        </div>
+                        
+                        <div class="example-card" onclick="sendExampleMessage('מי המטופלים שלי היום?')">
+                            <div class="example-title">📅 מטופלים להיום </div>
+                            <div class="example-description"> הצג מי אמור להגיע היום </div>
+                        </div>
+                        
+                        <div class="example-card" onclick="sendExampleMessage('מי המושגחים שלי ביחידה?')">
+                            <div class="example-title">👥 מושגחים</div>
+                            <div class="example-description">מידע על מושגחים ביחידה וניהול מקרים</div>
+                        </div>
+                        
+                        <div class="example-card" onclick="sendExampleMessage('איך אני מתמודד עם עומס רגשי?')">
+                            <div class="example-title">💪 תמיכה מקצועית</div>
+                            <div class="example-description">עזרה בהתמודדות עם לחץ ושחיקה במקצוע</div>
+                        </div>
+                        
+                        <div class="example-card" onclick="sendExampleMessage('עזור לי לזהות סימני הזנחה בילד')">
+                            <div class="example-title">🔍 אבחון וזיהוי</div>
+                            <div class="example-description">זיהוי סימני אזהרה ומצבי סיכון</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="input-area">
+                <div class="input-container">
+                    <div class="suggestions" id="suggestions">
+                        <div class="suggestion-chip" onclick="sendSuggestion('הכן תוכנית טיפול')">הכן תוכנית טיפול</div>
+                        <div class="suggestion-chip" onclick="sendSuggestion('ייעוץ מקצועי')">ייעוץ מקצועי</div>
+                        <div class="suggestion-chip" onclick="sendSuggestion('מושגחים ביחידה')">מושגחים ביחידה</div>
+                        <div class="suggestion-chip" onclick="sendSuggestion('תיעוד מקרה')">תיעוד מקרה</div>
+                    </div>
+                    
+                    <div class="input-wrapper">
+                        <textarea 
+                            id="message-input" 
+                            class="message-input" 
+                            placeholder="שתף את הנושא או המקרה שבו תרצה עזרה..."
+                            rows="1"
+                            onkeydown="handleKeyPress(event)"
+                            oninput="adjustTextareaHeight(this)"
+                        ></textarea>
+                        <button class="send-button" id="send-button" onclick="sendMessage()">
+                            <i class="fas fa-arrow-up"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="input-footer">
+                        שימו לב: מידע זה הוא לייעוץ כללי בלבד ואינו מחליף ייעוץ מקצועי או פיקוח
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3000';
+        let isTyping = false;
+        let chatHistory = [];
+        
+        // Initialize app
+        window.addEventListener('DOMContentLoaded', function() {
+            checkConnection();
+            loadTools();
+            focusInput();
+        });
+        
+        // Check server connection
+        async function checkConnection() {
+            const statusText = document.getElementById('status-text');
+            const statusDot = document.getElementById('connection-status');
+            
+            try {
+                const response = await fetch(`${API_BASE}/`);
+                if (response.ok) {
+                    statusText.textContent = 'מחובר';
+                    statusDot.style.background = '#16a085';
+                } else {
+                    throw new Error('Server error');
+                }
+            } catch (error) {
+                statusText.textContent = 'לא מחובר';
+                statusDot.style.background = '#e74c3c';
+                showWelcomeMessage(false);
+            }
+        }
+        
+        // Load available tools
+        async function loadTools() {
+            try {
+                const response = await fetch(`${API_BASE}/api/tools`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    const toolsCount = Object.keys(data.tools).length;
+                    document.getElementById('tools-info').textContent = `${toolsCount} כלים מקצועיים זמינים`;
+                } else {
+                    document.getElementById('tools-info').textContent = 'שגיאה בטעינת כלים';
+                }
+            } catch (error) {
+                document.getElementById('tools-info').textContent = 'כלים לא זמינים';
+            }
+        }
+        
+        // Show welcome message or error
+        function showWelcomeMessage(connected = true) {
+            const welcomeScreen = document.getElementById('welcome-screen');
+            if (!connected) {
+                welcomeScreen.innerHTML = `
+                    <div class="welcome-icon" style="color: #e74c3c;">⚠️</div>
+                    <h2 class="welcome-title">בעיית חיבור</h2>
+                    <p class="welcome-subtitle">
+                        לא ניתן להתחבר לשרת העוזר החכם<br>
+                        נא לוודא שהשרת פועל או לנסות שנית מאוחר יותר
+                    </p>
+                `;
+            }
+        }
+        
+        // Add message to chat
+        function addMessage(type, content, toolUsed = null, toolResult = null) {
+            const messagesContainer = document.getElementById('chat-messages');
+            const welcomeScreen = document.getElementById('welcome-screen');
+            
+            // Hide welcome screen on first message
+            if (welcomeScreen) {
+                welcomeScreen.style.display = 'none';
+            }
+            
+            const messageGroup = document.createElement('div');
+            messageGroup.className = 'message-group';
+            
+            const message = document.createElement('div');
+            message.className = 'message';
+            
+            const avatar = document.createElement('div');
+            avatar.className = `message-avatar ${type === 'user' ? 'user-avatar' : 'ai-avatar'}`;
+            avatar.innerHTML = type === 'user' ? '<i class="fas fa-user"></i>' : '🔑';
+            
+            const messageContent = document.createElement('div');
+            messageContent.className = 'message-content';
+            
+            const messageText = document.createElement('div');
+            messageText.className = 'message-text';
+            messageText.innerHTML = content.replace(/\n/g, '<br>');
+            
+            const messageMeta = document.createElement('div');
+            messageMeta.className = 'message-meta';
+            
+            const timestamp = new Date().toLocaleTimeString('he-IL', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            messageMeta.innerHTML = `<span>${timestamp}</span>`;
+            
+            messageContent.appendChild(messageText);
+            messageContent.appendChild(messageMeta);
+            
+            message.appendChild(avatar);
+            message.appendChild(messageContent);
+            messageGroup.appendChild(message);
+            
+            messagesContainer.appendChild(messageGroup);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            
+            // Add to chat history
+            chatHistory.push({ type, content, timestamp, toolUsed, toolResult });
+        }
+        
+        // Show typing indicator
+        function showTypingIndicator() {
+            const messagesContainer = document.getElementById('chat-messages');
+            const welcomeScreen = document.getElementById('welcome-screen');
+            
+            if (welcomeScreen) {
+                welcomeScreen.style.display = 'none';
+            }
+            
+            const messageGroup = document.createElement('div');
+            messageGroup.className = 'message-group';
+            messageGroup.id = 'typing-message';
+            
+            const message = document.createElement('div');
+            message.className = 'message';
+            
+            const avatar = document.createElement('div');
+            avatar.className = 'message-avatar ai-avatar';
+            avatar.innerHTML = '🔑';
+            
+            const messageContent = document.createElement('div');
+            messageContent.className = 'message-content';
+            
+            const typingIndicator = document.createElement('div');
+            typingIndicator.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 8px; color: #7f8c8d;">
+                    <span>מעבד את הבקשה...</span>
+                    <div style="display: flex; gap: 4px;">
+                        <div style="width: 8px; height: 8px; background: #16a085; border-radius: 50%; animation: pulse 1.5s infinite;"></div>
+                        <div style="width: 8px; height: 8px; background: #16a085; border-radius: 50%; animation: pulse 1.5s infinite 0.2s;"></div>
+                        <div style="width: 8px; height: 8px; background: #16a085; border-radius: 50%; animation: pulse 1.5s infinite 0.4s;"></div>
+                    </div>
+                </div>
+            `;
+            
+            messageContent.appendChild(typingIndicator);
+            message.appendChild(avatar);
+            message.appendChild(messageContent);
+            messageGroup.appendChild(message);
+            
+            messagesContainer.appendChild(messageGroup);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+        
+        // Hide typing indicator
+        function hideTypingIndicator() {
+            const typingMessage = document.getElementById('typing-message');
+            if (typingMessage) {
+                typingMessage.remove();
+            }
+        }
+        
+        // Send message (mock functionality for demo)
+        async function sendMessage() {
+            const input = document.getElementById('message-input');
+            const sendButton = document.getElementById('send-button');
+            const message = input.value.trim();
+            
+            if (!message || isTyping) return;
+            
+            // Add user message
+            addMessage('user', message);
+            
+            // Clear input and disable button
+            input.value = '';
+            adjustTextareaHeight(input);
+            sendButton.disabled = true;
+            isTyping = true;
+            
+            // Hide suggestions
+            document.getElementById('suggestions').style.display = 'none';
+            
+            // Show typing indicator
+            showTypingIndicator();
+            
+            // Mock AI response after delay
+            setTimeout(() => {
+                hideTypingIndicator();
+                
+                // Generate contextual response based on message content
+                let response = generateSocialWorkerResponse(message);
+                
+                addMessage('ai', response);
+                
+                sendButton.disabled = false;
+                isTyping = false;
+                focusInput();
+            }, 2000 + Math.random() * 2000); // Random delay between 2-4 seconds
+        }
+        
+        // Generate contextual responses for social worker topics
+        function generateSocialWorkerResponse(message) {
+            const msg = message.toLowerCase();
+            
+            if (msg.includes('תוכנית טיפול') || msg.includes('תכנית טיפול')) {
+                return `אני אשמח לעזור בהכנת תוכנית טיפול. תוכנית טיפול מותאמת כוללת:
+
+1. **הערכת המצב הנוכחי** - ניתוח של המשאבים והקשיים
+2. **הגדרת יעדים** - יעדים ברורים ומדידים לטווח קצר וארוך
+3. **אסטרטגיות התערבות** - שיטות וכלים מקצועיים
+4. **משאבים נדרשים** - זיהוי גורמי תמיכה בקהילה
+5. **מדדי הצלחה** - איך נדע שהתוכנית עובדת
+6. **לוחות זמנים** - מתי נבחן את ההתקדמות
+
+האם תוכל לספר לי קצת יותר על המקרה הספציפי?`;
+            }
+            
+            if (msg.includes('הזנחה') || msg.includes('התעללות') || msg.includes('סימני')) {
+                return `זיהוי מוקדם של סימני הזנחה או התעללות הוא חיוני. הנה סימנים עיקריים לשים לב אליהם:
+
+**סימנים פיזיים:**
+• שינויים בהתנהגות פתאומיים
+• פצעים או חבלות ללא הסבר
+• הזנחה ברמת ההיגיינה
+• עייפות או רעב כרוניים
+
+**סימנים רגשיים:**
+• נסיגה חברתית
+• חרדה או דיכאון
+• התנהגות לא מתאימה לגיל
+• בעיות שינה או סיוטים
+
+**חשוב**: אם יש חשד לסכנה מיידית, יש לפנות מיד לרשויות המוסמכות (משטרה/מחלקות הרווחה).
+
+האם המקרה דורש התערבות מיידית?`;
+            }
+            
+            if (msg.includes('עומס') || msg.includes('לחץ') || msg.includes('שחיקה')) {
+                return `התמודדות עם עומס רגשי ושחיקה מקצועית היא חלק חשוב מהעבודה הסוציאלית:
+
+**אסטרטגיות התמודדות:**
+• **הגבלת עומסי עבודה** - מתן עדיפות למקרים דחופים
+• **פיקוח מקצועי** - דיון קבוע עם מפקח או עמית ותיק
+• **הפסקות ומנוחה** - חשיבות הפסקות במהלך היום
+• **פעילות גופנית** - ספורט או יוגה להפחתת מתח
+• **תמיכה מקצועית** - קבוצת תמיכה או יעוץ פסיכולוגי
+
+**זכור**: דאגה לעצמך אינה רדיפה אחר עונג - היא הכרחית לעבודה יעילה ואיכותית.
+
+איך אתה מרגיש לגבי העומס הנוכחי?`;
+            }
+            
+            if (msg.includes('זכויות') || msg.includes('חוק') || msg.includes('הליך')) {
+                return `זכויות המטופל הן בסיס העבודה הסוציאלית:
+
+**זכויות יסוד:**
+• **כבוד וכבוד האדם** - יחס שוויוני ומכבד
+• **חיסיון מקצועי** - שמירה על פרטיות המידע
+• **השתתפות בתכנון** - מטופל כשותף בתהליך
+• **זכות לקבל מידע** - הסבר על התהליך והזכויות
+• **זכות לערעור** - אפשרות לערער על החלטות
+
+**חובות המקצוען:**
+• דיווח חובה במקרים של סכנה
+• שמירה על גבולות מקצועיים
+• תיעוד מדויק ושקוף
+• עדכון מתמיד של ידע מקצועי
+
+על איזה נושא ספציפי תרצה להרחיב?`;
+            }
+            
+            if (msg.includes('תיעוד') || msg.includes('דוח') || msg.includes('כתיבה')) {
+                return `תיעוד מקצועי וברור הוא קריטי לעבודה איכותית:
+
+**עקרונות תיעוד טוב:**
+• **עובדתיות** - רק מה שנצפה או נאמר ישירות
+• **בהירות** - שפה פשוטה ומובנת
+• **רלוונטיות** - מידע הקשור ישירות למטרות הטיפול
+• **עדכניות** - תיעוד מיידי או קרוב ביותר לאירוע
+
+**מבנה דוח מומלץ:**
+1. תאריך ושעה
+2. נוכחים בפגישה
+3. תיאור המצב/השיחה
+4. הערכה מקצועית
+5. המלצות לפעולה
+6. חתימה ומספר רישיון
+
+האם יש מקרה ספציפי שתרצה עזרה בתיעודו?`;
+            }
+            
+            // General helpful response
+            return `תודה על השאלה. כעוזר מקצועי לעובדים סוציאליים, אני כאן לסייע במגוון נושאים:
+
+• **הכנת תוכניות טיפול** מותאמות אישית
+• **ייעוץ מקצועי** במצבים מורכבים  
+• **תיעוד מקרים** באופן מקצועי
+• **מידע על מושגחים** וניהול מקרים
+• **התמודדות עם לחץ** ושחיקה מקצועית
+• **זיהוי מצבי סיכון** והתערבות מתאימה
+
+האם תוכל לפרט יותר על הנושא הספציפי שבו תרצה עזרה?`;
+        }
+        
+        // Send suggestion
+        function sendSuggestion(text) {
+            document.getElementById('message-input').value = text;
+            sendMessage();
+        }
+        
+        // Send example message
+        function sendExampleMessage(text) {
+            document.getElementById('message-input').value = text;
+            sendMessage();
+        }
+        
+        // Handle key press
+        function handleKeyPress(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+        
+        // Adjust textarea height
+        function adjustTextareaHeight(textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = textarea.scrollHeight + 'px';
+        }
+        
+        // Focus input
+        function focusInput() {
+            document.getElementById('message-input').focus();
+        }
+        
+        // Start new chat
+        function startNewChat() {
+            chatHistory = [];
+            const messagesContainer = document.getElementById('chat-messages');
+            messagesContainer.innerHTML = `
+                <div class="welcome-screen" id="welcome-screen">
+                    <div class="welcome-icon">🔑</div>
+                    <h2 class="welcome-title">ברוך הבא! איך אוכל לסייע היום?</h2>
+                    <p class="welcome-subtitle">
+                        אני עוזר חכם המיועד לסייע לעובדים סוציאליים בעבודתם היומיומית<br>
+                        אני יכול לעזור בייעוץ מקצועי, הכנת תוכניות טיפול, וניתוח מצבים מורכבים
+                    </p>
+                    
+                    <div class="example-prompts">
+                        <div class="example-card" onclick="sendExampleMessage('עזור לי להכין תוכנית טיפול למשפחה')">
+                            <div class="example-title">📋 תוכנית טיפול</div>
+                            <div class="example-description">הכנת תוכניות טיפול מותאמות אישית למקרים שונים</div>
+                        </div>
+                        
+                        <div class="example-card" onclick="sendExampleMessage('איך אני מתמודד עם הורה שמסרב לשיתוף פעולה?')">
+                            <div class="example-title">🗣️ ייעוץ מקצועי</div>
+                            <div class="example-description">קבלת הכוונה במצבים מורכבים ואתגרים מקצועיים</div>
+                        </div>
+                        
+                        <div class="example-card" onclick="sendExampleMessage('מי המטופלים שלי היום?')">
+                            <div class="example-title">📅 מטופלים מתוכננים להיום</div>
+                            <div class="example-description"> הצג את המטופלים שצפויים להגיע היום</div>
+                        </div>
+                        
+                        <div class="example-card" onclick="sendExampleMessage('מי המושגחים שלי ביחידה?')">
+                            <div class="example-title">👥 מושגחים</div>
+                            <div class="example-description">מידע על מושגחים ביחידה וניהול מקרים</div>
+                        </div>
+                        
+                        <div class="example-card" onclick="sendExampleMessage('איך אני מתמודד עם עומס רגשי?')">
+                            <div class="example-title">💪 תמיכה מקצועית</div>
+                            <div class="example-description">עזרה בהתמודדות עם לחץ ושחיקה במקצוע</div>
+                        </div>
+                        
+                        <div class="example-card" onclick="sendExampleMessage('עזור לי לזהות סימני הזנחה בילד')">
+                            <div class="example-title">🔍 אבחון וזיהוי</div>
+                            <div class="example-description">זיהוי סימני אזהרה ומצבי סיכון</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Show suggestions again
+            document.getElementById('suggestions').style.display = 'flex';
+            focusInput();
+        }
+        
+        // Add pulse animation for typing indicator
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes pulse {
+                0%, 100% { opacity: 0.4; transform: scale(1); }
+                50% { opacity: 1; transform: scale(1.2); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

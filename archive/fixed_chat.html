@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCP Chat - Real Ollama</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            direction: rtl;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            height: calc(100vh - 40px);
+        }
+        
+        .chat-header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px 15px 0 0;
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .logo {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        
+        .title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a202c;
+            margin: 0;
+        }
+        
+        .subtitle {
+            color: #64748b;
+            font-size: 14px;
+            margin: 5px 0 0 0;
+        }
+        
+        .chat-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 0 0 15px 15px;
+            height: calc(100vh - 180px);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        
+        .message {
+            max-width: 80%;
+            padding: 12px 18px;
+            border-radius: 18px;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+        }
+        
+        .user-message {
+            align-self: flex-end;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin-left: auto;
+        }
+        
+        .assistant-message {
+            align-self: flex-start;
+            background: #f8fafc;
+            color: #1a202c;
+            border: 1px solid #e2e8f0;
+            margin-right: auto;
+        }
+        
+        .tool-info {
+            font-size: 12px;
+            opacity: 0.7;
+            margin-top: 8px;
+            font-style: italic;
+        }
+        
+        .input-area {
+            padding: 20px;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        
+        #messageInput {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 25px;
+            outline: none;
+            font-size: 16px;
+            background: white;
+        }
+        
+        #messageInput:focus {
+            border-color: #667eea;
+        }
+        
+        #sendBtn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: transform 0.2s;
+        }
+        
+        #sendBtn:hover {
+            transform: translateY(-2px);
+        }
+        
+        #sendBtn:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .loading {
+            text-align: center;
+            color: #64748b;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="chat-header">
+            <div class="logo">🔑</div>
+            <h1 class="title">MCP Chat - Real Ollama</h1>
+            <p class="subtitle">Connected to Real MCP with Ollama AI</p>
+        </div>
+        
+        <div class="chat-container">
+            <div class="messages" id="messages">
+                <div class="message assistant-message">
+                    שלום! אני מחובר ל-MCP אמיתי עם Ollama.
+                    <br><br>תוכל לשאול:
+                    <br>• "הראה לי פוסטים"
+                    <br>• "מי המשתמש מספר 1"
+                    <br>• "מה הפוסטים של משתמש 2"
+                    <br><br>⏰ זה יכול לקחת 1-3 דקות (AI אמיתי!)
+                </div>
+            </div>
+            
+            <div class="input-area">
+                <input type="text" id="messageInput" placeholder="כתוב הודעה..." onkeypress="handleKeyPress(event)">
+                <button onclick="sendMessage()" id="sendBtn">שלח</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3001';
+        
+        function addMessage(text, isUser = false, toolUsed = null) {
+            const messages = document.getElementById('messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = isUser ? 'message user-message' : 'message assistant-message';
+            
+            let content = text;
+            if (toolUsed) {
+                content += `<div class="tool-info">🔧 השתמש בכלי: ${toolUsed}</div>`;
+            }
+            
+            messageDiv.innerHTML = content;
+            messages.appendChild(messageDiv);
+            messages.scrollTop = messages.scrollHeight;
+        }
+        
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const sendBtn = document.getElementById('sendBtn');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            // Add user message
+            addMessage(message, true);
+            input.value = '';
+            sendBtn.disabled = true;
+            sendBtn.textContent = '⏳ מעבד...';
+            
+            // Add loading message
+            addMessage('🤔 חושב... (זה יכול לקחת 1-3 דקות)', false);
+            
+            try {
+                const response = await fetch(`${API_BASE}/api/chat`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message: message })
+                });
+                
+                const data = await response.json();
+                
+                // Remove loading message
+                const messages = document.getElementById('messages');
+                if (messages.lastChild.textContent.includes('חושב...')) {
+                    messages.removeChild(messages.lastChild);
+                }
+                
+                if (data.success) {
+                    addMessage(data.message, false, data.tool_used);
+                } else {
+                    addMessage(`שגיאה: ${data.error || 'שגיאה לא ידועה'}`, false);
+                }
+                
+            } catch (error) {
+                // Remove loading message
+                const messages = document.getElementById('messages');
+                if (messages.lastChild.textContent.includes('חושב...')) {
+                    messages.removeChild(messages.lastChild);
+                }
+                addMessage(`שגיאת חיבור: ${error.message}`, false);
+            }
+            
+            sendBtn.disabled = false;
+            sendBtn.textContent = 'שלח';
+        }
+        
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+        
+        // Test connection on load
+        window.onload = async function() {
+            try {
+                const response = await fetch(`${API_BASE}/`);
+                if (response.ok) {
+                    addMessage('✅ מחובר בהצלחה ל-MCP + Ollama', false);
+                }
+            } catch (error) {
+                addMessage(`❌ כשל בחיבור: ${error.message}`, false);
+            }
+        };
+    </script>
+</body>
+</html>

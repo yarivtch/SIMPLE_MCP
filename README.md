@@ -1,7 +1,24 @@
-# SIMPLE MCP - Ollama Integration with JSONPlaceholder API
+# SIMPLE MCP - AI Assistant with Live Data Access
 
-## תיאור בעברית
-פרויקט Python שמדגים איך לחבר בין Ollama AI ל-API חיצוני באמצעות פרוטוקול MCP. המערכת מאפשרת לשאול שאלות בעברית ולקבל מידע חי מ-JSONPlaceholder API עם תשובות AI מותאמות.
+> **Professional MCP (Model Context Protocol) implementation with Ollama AI integration**
+
+![Status: Production Ready](https://img.shields.io/badge/Status-Production%20Ready-green)
+![Technology: MCP](https://img.shields.io/badge/Technology-MCP-blue)
+![AI: Ollama](https://img.shields.io/badge/AI-Ollama-orange)
+![Language: Hebrew/English](https://img.shields.io/badge/Language-Hebrew%2FEnglish-purple)
+
+## 🎯 Project Overview
+
+SIMPLE MCP is a **real implementation** of the Model Context Protocol (MCP) that provides AI assistants with access to live external data. Unlike static chatbots, this system can fetch current information from the internet and provide accurate, up-to-date responses.
+
+### Key Features
+
+- ✅ **Real MCP Implementation** - Official MCP protocol, not simulation
+- ✅ **Ollama AI Integration** - Local AI with Hebrew language support  
+- ✅ **Live External Data** - Real-time API calls to JSONPlaceholder
+- ✅ **Professional UI** - Modern chat interface with RTL Hebrew support
+- ✅ **Production Ready** - Full error handling and Windows compatibility
+- ✅ **Specialized Interfaces** - Medical and Social Worker versions
 
 ## English Description
 A Python-based MCP (Model Context Protocol) implementation that demonstrates how to integrate Ollama AI with external APIs. The project connects Ollama to the JSONPlaceholder API to provide live data queries with AI assistance.
@@ -36,22 +53,42 @@ A Python-based MCP (Model Context Protocol) implementation that demonstrates how
 - [Ollama](https://ollama.ai/) installed and running
 - An Ollama model (default: "aya")
 
-## Installation
+## Quick Installation
 
+### Windows
 1. Clone the repository
-2. Install dependencies:
+2. Run the installation script:
+   ```cmd
+   install_dependencies.bat
+   ```
+
+### Linux/Mac
+1. Clone the repository
+2. Make the script executable and run:
+   ```bash
+   chmod +x install_dependencies.sh
+   ./install_dependencies.sh
+   ```
+
+### Manual Installation
+1. Clone the repository
+2. Create virtual environment:
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # Linux/Mac
+   venv\Scripts\activate.bat  # Windows
+   ```
+3. Install dependencies:
    ```bash
    pip install -r requirements.txt
    ```
-
-3. Make sure Ollama is running:
+4. Make sure Ollama is running:
    ```bash
    ollama serve
    ```
-
-4. Pull the required model:
+5. Pull the required model:
    ```bash
-   ollama pull aya
+   ollama pull llama3.3  # or your preferred model
    ```
 
 ## Usage

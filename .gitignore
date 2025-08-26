@@ -186,3 +186,10 @@ models/
 # MCP specific
 mcp_data/
 temp_files/
+
+# Claude Code settings (keep local settings private)
+.claude/settings.local.json
+
+# Project specific temporary files
+*.tmp
+*.temp

@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<!--
+SIMPLE MCP - Main Chat Interface
+
+Purpose: Professional chat interface for MCP system with Ollama AI
+Technology: Modern HTML5 + CSS3 + JavaScript
+Features: RTL Hebrew support, real-time chat, MCP tool integration
+API Connection: http://localhost:3001 (MCP Gateway)
+
+Key Features:
+- ✅ Real-time chat with Ollama AI
+- ✅ Hebrew (RTL) and English language support
+- ✅ MCP tools integration (live external data)
+- ✅ Professional modern design
+- ✅ Mobile responsive layout
+- ✅ Connection status monitoring
+- ✅ Tool usage indicators
+
+Created: 2025-08-26
+Author: SIMPLE MCP Project
+Status: PRODUCTION READY ✅
+-->
+<html dir="rtl" lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIMPLE MCP - AI Chat Assistant</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* === GLOBAL STYLES === */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            overflow: hidden;
+            direction: rtl;
+        }
+        
+        /* === MAIN CONTAINER === */
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            margin: 10px;
+            height: calc(100vh - 20px);
+        }
+        
+        /* === HEADER === */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 20px 20px 0 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .logo {
+            font-size: 32px;
+            filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3));
+        }
+        
+        .title {
+            font-size: 24px;
+            font-weight: 700;
+            margin: 0;
+        }
+        
+        .subtitle {
+            font-size: 14px;
+            opacity: 0.9;
+            margin: 5px 0 0 0;
+        }
+        
+        .status-section {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+        }
+        
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #4ade80;
+            box-shadow: 0 0 10px rgba(74, 222, 128, 0.5);
+        }
+        
+        /* === CHAT AREA === */
+        .chat-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        
+        .message {
+            max-width: 80%;
+            padding: 16px 20px;
+            border-radius: 20px;
+            word-wrap: break-word;
+            line-height: 1.6;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .user-message {
+            align-self: flex-end;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin-left: 20%;
+        }
+        
+        .assistant-message {
+            align-self: flex-start;
+            background: white;
+            color: #1a202c;
+            border: 1px solid #e2e8f0;
+            margin-right: 20%;
+        }
+        
+        .message-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 8px;
+            font-size: 12px;
+            opacity: 0.7;
+        }
+        
+        .tool-badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+        
+        .typing-indicator {
+            align-self: flex-start;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 20px;
+            padding: 16px 20px;
+            margin-right: 20%;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+        }
+        
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #667eea;
+            animation: typing 1.4s infinite both;
+        }
+        
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: scale(0.8);
+                opacity: 0.5;
+            }
+            30% {
+                transform: scale(1.2);
+                opacity: 1;
+            }
+        }
+        
+        /* === INPUT AREA === */
+        .input-area {
+            padding: 20px;
+            background: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+            border-radius: 0 0 20px 20px;
+        }
+        
+        .input-container {
+            display: flex;
+            gap: 12px;
+            align-items: flex-end;
+        }
+        
+        .message-input {
+            flex: 1;
+            padding: 16px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 25px;
+            outline: none;
+            font-size: 16px;
+            background: white;
+            resize: none;
+            min-height: 50px;
+            max-height: 120px;
+            font-family: inherit;
+            line-height: 1.4;
+        }
+        
+        .message-input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .send-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 16px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 100px;
+            justify-content: center;
+        }
+        
+        .send-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
+        }
+        
+        .send-button:disabled {
+            background: #94a3b8;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        /* === WELCOME MESSAGE === */
+        .welcome-message {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            border: 2px solid rgba(102, 126, 234, 0.2);
+            border-radius: 20px;
+            padding: 20px;
+            margin-right: 20%;
+            align-self: flex-start;
+        }
+        
+        .welcome-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .welcome-features {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .welcome-features li {
+            padding: 5px 0;
+            color: #4a5568;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .welcome-features li::before {
+            content: '✨';
+            font-size: 14px;
+        }
+        
+        /* === RESPONSIVE DESIGN === */
+        @media (max-width: 768px) {
+            .container {
+                margin: 0;
+                border-radius: 0;
+                height: 100vh;
+            }
+            
+            .header {
+                border-radius: 0;
+                padding: 15px;
+            }
+            
+            .title {
+                font-size: 20px;
+            }
+            
+            .message {
+                max-width: 90%;
+            }
+            
+            .user-message {
+                margin-left: 10%;
+            }
+            
+            .assistant-message, .welcome-message {
+                margin-right: 10%;
+            }
+        }
+        
+        /* === UTILITY CLASSES === */
+        .text-center {
+            text-align: center;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo-section">
+                <div class="logo">🤖</div>
+                <div>
+                    <h1 class="title">SIMPLE MCP Assistant</h1>
+                    <p class="subtitle">מובע בינה מלאכותית עם גישה למידע חי</p>
+                </div>
+            </div>
+            <div class="status-section">
+                <div class="status-indicator" id="statusIndicator"></div>
+                <span id="statusText">מתחבר...</span>
+            </div>
+        </div>
+        
+        <!-- Chat Container -->
+        <div class="chat-container">
+            <!-- Messages Area -->
+            <div class="messages-container" id="messagesContainer">
+                <!-- Welcome Message -->
+                <div class="welcome-message fade-in">
+                    <div class="welcome-title">ברוך הבא לעוזר MCP החכם! 🎉</div>
+                    <ul class="welcome-features">
+                        <li>שאל שאלות בעברית או אנגלית</li>
+                        <li>קבל מידע חי מהאינטרנט</li>
+                        <li>בדוק פוסטים ומשתמשים</li>
+                        <li>צפה בתגובות ותכנים</li>
+                    </ul>
+                    <br>
+                    <strong>דוגמאות לשאלות:</strong>
+                    <br>• "מי המשתמש מספר 1?"
+                    <br>• "הראה לי 5 פוסטים"
+                    <br>• "מה הפוסטים של משתמש 2?"
+                </div>
+            </div>
+            
+            <!-- Input Area -->
+            <div class="input-area">
+                <div class="input-container">
+                    <textarea 
+                        class="message-input" 
+                        id="messageInput" 
+                        placeholder="כתוב כאן את השאלה שלך..."
+                        rows="1"
+                        onkeydown="handleKeyDown(event)"
+                        oninput="autoResize(this)"></textarea>
+                    <button class="send-button" id="sendButton" onclick="sendMessage()">
+                        <i class="fas fa-paper-plane"></i>
+                        <span>שלח</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // === CONFIGURATION ===
+        const API_BASE = 'http://localhost:3001';
+        
+        // === GLOBAL VARIABLES ===
+        let isTyping = false;
+        let chatHistory = [];
+        
+        // === INITIALIZATION ===
+        document.addEventListener('DOMContentLoaded', function() {
+            checkServerConnection();
+            focusInput();
+        });
+        
+        // === CONNECTION MANAGEMENT ===
+        async function checkServerConnection() {
+            const statusIndicator = document.getElementById('statusIndicator');
+            const statusText = document.getElementById('statusText');
+            
+            try {
+                const response = await fetch(`${API_BASE}/`);
+                if (response.ok) {
+                    statusIndicator.style.background = '#4ade80';
+                    statusText.textContent = 'מחובר ופעיל';
+                    
+                    // Load available tools
+                    loadAvailableTools();
+                } else {
+                    throw new Error('Server not responding');
+                }
+            } catch (error) {
+                statusIndicator.style.background = '#ef4444';
+                statusText.textContent = 'אין חיבור';
+                console.error('Connection failed:', error);
+            }
+        }
+        
+        async function loadAvailableTools() {
+            try {
+                const response = await fetch(`${API_BASE}/api/tools`);
+                const data = await response.json();
+                console.log('Available tools:', data.tools);
+            } catch (error) {
+                console.error('Failed to load tools:', error);
+            }
+        }
+        
+        // === MESSAGE HANDLING ===
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const sendButton = document.getElementById('sendButton');
+            const message = input.value.trim();
+            
+            if (!message || isTyping) return;
+            
+            // Add user message
+            addMessage(message, true);
+            
+            // Clear input and disable button
+            input.value = '';
+            autoResize(input);
+            setTyping(true);
+            
+            try {
+                // Show typing indicator
+                showTypingIndicator();
+                
+                const response = await fetch(`${API_BASE}/api/chat`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message: message })
+                });
+                
+                const data = await response.json();
+                
+                // Hide typing indicator
+                hideTypingIndicator();
+                
+                if (data.success) {
+                    addMessage(data.message, false, data.tool_used);
+                    
+                    // Update chat history
+                    chatHistory.push({
+                        user: message,
+                        assistant: data.message,
+                        tool_used: data.tool_used
+                    });
+                } else {
+                    addMessage(`שגיאה: ${data.error || 'שגיאה לא ידועה'}`, false);
+                }
+                
+            } catch (error) {
+                hideTypingIndicator();
+                addMessage(`שגיאת חיבור: ${error.message}`, false);
+                
+                // Update connection status
+                const statusIndicator = document.getElementById('statusIndicator');
+                const statusText = document.getElementById('statusText');
+                statusIndicator.style.background = '#ef4444';
+                statusText.textContent = 'שגיאת חיבור';
+            }
+            
+            setTyping(false);
+            focusInput();
+        }
+        
+        function addMessage(content, isUser = false, toolUsed = null) {
+            const messagesContainer = document.getElementById('messagesContainer');
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message fade-in ${isUser ? 'user-message' : 'assistant-message'}`;
+            
+            // Format message content
+            let formattedContent = content.replace(/\n/g, '<br>');
+            messageDiv.innerHTML = formattedContent;
+            
+            // Add tool usage indicator for assistant messages
+            if (!isUser && toolUsed) {
+                const metaDiv = document.createElement('div');
+                metaDiv.className = 'message-meta';
+                metaDiv.innerHTML = `
+                    <div class="tool-badge">
+                        <i class="fas fa-tools"></i> ${toolUsed}
+                    </div>
+                    <span>נעשה שימוש בכלי MCP</span>
+                `;
+                messageDiv.appendChild(metaDiv);
+            }
+            
+            messagesContainer.appendChild(messageDiv);
+            scrollToBottom();
+        }
+        
+        function showTypingIndicator() {
+            const messagesContainer = document.getElementById('messagesContainer');
+            
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'typing-indicator fade-in';
+            typingDiv.id = 'typingIndicator';
+            typingDiv.innerHTML = `
+                <div class="typing-dots">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
+                <span>העוזר חושב...</span>
+            `;
+            
+            messagesContainer.appendChild(typingDiv);
+            scrollToBottom();
+        }
+        
+        function hideTypingIndicator() {
+            const typingIndicator = document.getElementById('typingIndicator');
+            if (typingIndicator) {
+                typingIndicator.remove();
+            }
+        }
+        
+        function setTyping(typing) {
+            isTyping = typing;
+            const sendButton = document.getElementById('sendButton');
+            
+            if (typing) {
+                sendButton.disabled = true;
+                sendButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>שולח...</span>';
+            } else {
+                sendButton.disabled = false;
+                sendButton.innerHTML = '<i class="fas fa-paper-plane"></i><span>שלח</span>';
+            }
+        }
+        
+        // === INPUT HANDLING ===
+        function handleKeyDown(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+        
+        function autoResize(textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+        }
+        
+        function focusInput() {
+            const input = document.getElementById('messageInput');
+            input.focus();
+        }
+        
+        function scrollToBottom() {
+            const messagesContainer = document.getElementById('messagesContainer');
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+        
+        // === UTILITY FUNCTIONS ===
+        function clearChat() {
+            const messagesContainer = document.getElementById('messagesContainer');
+            const messages = messagesContainer.querySelectorAll('.message, .typing-indicator');
+            messages.forEach(msg => msg.remove());
+            chatHistory = [];
+        }
+        
+        // === ERROR HANDLING ===
+        window.addEventListener('error', function(event) {
+            console.error('JavaScript Error:', event.error);
+        });
+        
+        window.addEventListener('unhandledrejection', function(event) {
+            console.error('Unhandled Promise Rejection:', event.reason);
+        });
+    </script>
+</body>
+</html>

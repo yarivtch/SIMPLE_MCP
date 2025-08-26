@@ -181,7 +181,7 @@ class MCPGateway:
             self.process.wait()
 
 # יצירת Gateway instance
-gateway = MCPGateway("python", ["real_mcp_server.py"])
+gateway = MCPGateway("python", ["api_server.py"])
 
 @app.route('/api/chat', methods=['POST'])
 def chat_with_ai():
@@ -338,28 +338,28 @@ def get_available_tools():
 def home():
     return jsonify({
         "message": "MCP Gateway + Ollama Client",
-        "architecture": "HTML Client → MCP Gateway → MCP Server (stdio) → JSONPlaceholder API",
+        "architecture": "HTML Client -> MCP Gateway -> MCP Server (stdio) -> JSONPlaceholder API",
         "status": "running"
     })
 
 if __name__ == '__main__':
     print("Starting MCP Gateway + Ollama Client...")
-    print("Architecture: HTTP ↔ MCP Gateway ↔ MCP Server (stdio)")
+    print("Architecture: HTTP <-> MCP Gateway <-> MCP Server (stdio)")
     
     # הפעלת MCP Gateway
     try:
         gateway.start()
-        print("✅ MCP Gateway connected to server")
+        print("[OK] MCP Gateway connected to server")
         
         # בדיקת Ollama
         test_response = requests.get(f"{OLLAMA_API_URL}/api/tags", timeout=5)
         if test_response.status_code == 200:
-            print("✅ Ollama connection verified")
+            print("[OK] Ollama connection verified")
         
-        print("🌐 Server starting on http://localhost:3000")
+        print("[INFO] Server starting on http://localhost:3000")
         app.run(host='0.0.0.0', port=3000, debug=True)
         
     except Exception as e:
-        print(f"❌ Failed to start: {e}")
+        print(f"[ERROR] Failed to start: {e}")
     finally:
         gateway.stop()
